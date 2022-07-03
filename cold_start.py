@@ -1,4 +1,5 @@
 import argparse
+import os
 from collections import defaultdict
 
 parser = argparse.ArgumentParser()
@@ -54,6 +55,7 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
 
     # collect the cold-start items (with least iterations)
     ics_max, ics_min = 0, 10**6
+    discard_count = 0
     for uid in cs_item_seq_set.difference(mixed_set):
         # sequence cut-off after the last cold-start item -> allow test on cold-start item
         seq = User.pop(uid)
@@ -62,12 +64,13 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
         if i > ucs_max:     # all item-cold-start sample should be non-user-cold-start
             ics_seq[uid] = seq[0:i+1]
             ics_max, ics_min = max(ics_max, len(ics_seq[uid])), min(ics_min, len(ics_seq[uid]))
-
+        else:
+            discard_count += 1
     # the remaining sequences are for warm-start case
     ws_seq = User
 
     print("cold-start users: " + str(len(cs_user_list)))
-    print("without overlap: " + str(len(ucs_seq)) +
+    print("without overlap (exclude mixed cases): " + str(len(ucs_seq)) +
           "; sequence length between: " + str(ucs_min) + " ~ " + str(ucs_max))
 
     print("\nItems:")
@@ -76,26 +79,28 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     print("cold-start items: " + str(len(cs_item_list)) +
           "; # interacted users between: " + str(len(Item[cs_item_list[0]])) + " ~ " + str(len(Item[cs_item_list[-1]])))
     print("# sequences for item-cold-start: " + str(len(cs_item_seq_set)))
-    print("without overlap: " + str(len(ics_seq)) +
+    print("without overlap (exclude mixed cases): " + str(len(ics_seq)) + "; (" + str(discard_count) + " samples discarded" +
           "; sequences length between: " + str(ics_min) + " ~ " + str(ics_max))
 
     print("\nMixed:")
     print("samples that are both cold-start user and item: " + str(len(mixed_set)))
 
-
-    # for user in User:
-    #     nfeedback = len(User[user])
-    #     if nfeedback < 3:
-    #         user_train[user] = User[user]
-    #         user_valid[user] = []
-    #         user_test[user] = []
-    #     else:
-    #         user_train[user] = User[user][:-2]
-    #         user_valid[user] = []
-    #         user_valid[user].append(User[user][-2])
-    #         user_test[user] = []
-    #         user_test[user].append(User[user][-1])
-    # return [user_train, user_valid, user_test, usernum, itemnum]
+    # writing the split data sets into files in same folder
+    # each line in the format: sample_id user_id item_id
+    sample_id = 0
+    file_list = {
+        "ws": ws_seq, "ucs": ucs_seq, "ics": ics_seq, "mcs": mcs_seq
+    }
+    directory = 'data/' + fname
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    for name, dataset in file_list.items():
+        f = open('data/%s/%s.txt' % (fname, name), 'w')
+        for uid, item_list in dataset.items():
+            sample_id += 1
+            for iid in item_list:
+                f.write('%d %d %d\n' % (sample_id, uid, iid))
+        f.close()
 
 
 if __name__ == '__main__':
