@@ -56,7 +56,6 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
 
     # collect the cold-start items (with least iterations)
     ics_max, ics_min = 0, 10**6
-    discard_count = 0
     for uid in cs_item_seq_set.difference(mixed_set):
         # sequence cut-off after the last cold-start item -> allow test on cold-start item
         seq = User.pop(uid)
@@ -106,10 +105,18 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
         f = open('data/%s/%s.txt' % (fname, name), 'w')
         for uid, item_list in dataset.items():
             sample_id += 1
+            line_str = str(sample_id) + ' ' + str(uid)
+            sequence_str = ''
             for iid in item_list:
-                f.write('%d %d %d\n' % (sample_id, uid, iid))
+                sequence_str += (' ' + str(iid))
+            f.write('%s%s\n' % (line_str, sequence_str))
         f.close()
 
+    # write the list of cold-start items into file
+    f = open('data/%s/%s.txt' % (fname, 'cs_item_list'), 'w')
+    for iid in cs_item_list:
+        f.write('%d\n' % iid)
+    f.close()
 
 if __name__ == '__main__':
     get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.1)
