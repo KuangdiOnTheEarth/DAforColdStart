@@ -5,6 +5,7 @@ import argparse
 
 from model import SASRec
 from utils import *
+from utils_cs import *
 
 def str2bool(s):
     if s not in {'false', 'true'}:
@@ -39,7 +40,10 @@ if __name__ == '__main__':
     # global dataset
     if args.cold_start:
         print('-- Cold-Start Evaluation is activated --')
+        print('Loading dataset ...')
+        dataset = cs_data_partition(args.dataset)
     else:
+        print('Loading dataset ...')
         dataset = data_partition(args.dataset)
 
     [user_train, user_valid, user_test, usernum, itemnum] = dataset

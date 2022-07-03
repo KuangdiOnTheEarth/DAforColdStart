@@ -38,6 +38,7 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
         len(User[sorted_user_list[-1]])))
 
     # find out training samples that are both user & item cold-start
+    mcs_max, mcs_min = 0, 10 ** 6
     cs_item_seq_set = set()
     for iid in cs_item_list:
         user_set = set(Item[iid])
@@ -45,7 +46,7 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     mixed_set = set(cs_user_list).intersection(cs_item_seq_set)
     for uid in mixed_set:
         mcs_seq[uid] = User.pop(uid)
-        if uid == 3822: print("3822 discovered")
+        mcs_max, mcs_min = max(mcs_max, len(mcs_seq[uid])), min(mcs_min, len(mcs_seq[uid]))
 
     # collect the cold-start users (with least iterations)
     ucs_max, ucs_min = 0, 10 ** 6
@@ -65,25 +66,32 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
             ics_seq[uid] = seq[0:i+1]
             ics_max, ics_min = max(ics_max, len(ics_seq[uid])), min(ics_min, len(ics_seq[uid]))
         else:
-            discard_count += 1
+            mcs_seq[uid] = seq[0:i+1]
+
     # the remaining sequences are for warm-start case
     ws_seq = User
 
-    print("cold-start users: " + str(len(cs_user_list)))
-    print("without overlap (exclude mixed cases): " + str(len(ucs_seq)) +
-          "; sequence length between: " + str(ucs_min) + " ~ " + str(ucs_max))
+    print("-- Dataset split finished --")
+    print("Warm-Start:       %d samples" % len(ws_seq))
+    print("User-Cold-Start:  %d samples, length between %d ~ %d" % (len(ucs_seq), ucs_min, ucs_max))
+    print("Item-Cold-Start:  %d samples, length between %d ~ %d" % (len(ics_seq), ics_min, ics_max))
+    print("Mixed-Cold-Start: %d samples, length between %d ~ %d" % (len(mcs_seq), mcs_min, mcs_max))
 
-    print("\nItems:")
-    print("total items:" + str(num_item) +
-          "; # interacted users between: " + str(len(Item[sorted_item_list[0]])) + " ~ " + str(len(Item[sorted_item_list[-1]])))
-    print("cold-start items: " + str(len(cs_item_list)) +
-          "; # interacted users between: " + str(len(Item[cs_item_list[0]])) + " ~ " + str(len(Item[cs_item_list[-1]])))
-    print("# sequences for item-cold-start: " + str(len(cs_item_seq_set)))
-    print("without overlap (exclude mixed cases): " + str(len(ics_seq)) + "; (" + str(discard_count) + " samples discarded" +
-          "; sequences length between: " + str(ics_min) + " ~ " + str(ics_max))
-
-    print("\nMixed:")
-    print("samples that are both cold-start user and item: " + str(len(mixed_set)))
+    # print("cold-start users: " + str(len(cs_user_list)))
+    # print("without overlap (exclude mixed cases): " + str(len(ucs_seq)) +
+    #       "; sequence length between: " + str(ucs_min) + " ~ " + str(ucs_max))
+    #
+    # print("\nItems:")
+    # print("total items:" + str(num_item) +
+    #       "; # interacted users between: " + str(len(Item[sorted_item_list[0]])) + " ~ " + str(len(Item[sorted_item_list[-1]])))
+    # print("cold-start items: " + str(len(cs_item_list)) +
+    #       "; # interacted users between: " + str(len(Item[cs_item_list[0]])) + " ~ " + str(len(Item[cs_item_list[-1]])))
+    # print("# sequences for item-cold-start: " + str(len(cs_item_seq_set)))
+    # print("without overlap (exclude mixed cases): " + str(len(ics_seq)) + "; (" + str(discard_count) + " samples discarded" +
+    #       "; sequences length between: " + str(ics_min) + " ~ " + str(ics_max))
+    #
+    # print("\nMixed:")
+    # print("samples that are both cold-start user and item: " + str(len(mixed_set)))
 
     # writing the split data sets into files in same folder
     # each line in the format: sample_id user_id item_id
