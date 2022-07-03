@@ -26,6 +26,7 @@ parser.add_argument('--l2_emb', default=0.0, type=float)
 parser.add_argument('--device', default='cpu', type=str)
 parser.add_argument('--inference_only', default=False, type=str2bool)
 parser.add_argument('--state_dict_path', default=None, type=str)
+parser.add_argument('--cold_start', default=False, type=str2bool)
 
 args = parser.parse_args()
 if not os.path.isdir(args.dataset + '_' + args.train_dir):
@@ -36,7 +37,10 @@ f.close()
 
 if __name__ == '__main__':
     # global dataset
-    dataset = data_partition(args.dataset)
+    if args.cold_start:
+        print('-- Cold-Start Evaluation is activated --')
+    else:
+        dataset = data_partition(args.dataset)
 
     [user_train, user_valid, user_test, usernum, itemnum] = dataset
     num_batch = len(user_train) // args.batch_size # tail? + ((len(user_train) % args.batch_size) != 0)
