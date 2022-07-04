@@ -7,6 +7,20 @@ parser.add_argument('--mode', required=True)
 parser.add_argument('--raw_dataset')
 parser.add_argument('--cs_dataset')
 
+def sequence_cut(sequence, csi_list):
+    '''
+    Cut the sequence after the last and second-last (if exists) cold-start items, return the middle part
+    This function is used to generate the mixed-cold-start samples,
+    whose length is shorter than the user-cold-start threshold, and contain one and only one cold-start item at tail.
+    '''
+    i = 0  # index of the second last cold-start item
+    j = len(sequence) - 1  # index of the last cold-start item
+    # the sequence will be cut between [i+1, j] (both sides included)
+    while sequence[j] not in csi_list: j -= 1
+    i = j - 1
+    while i >= 0 and sequence[i] not in csi_list: i -= 1
+    return sequence[i + 1:j + 1]
+
 def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     user_count = {}  # number of interactions for each user
     item_count = {}  # number of interactions on each item
@@ -38,6 +52,7 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
         len(User[sorted_user_list[-1]])))
 
     # find out training samples that are both user & item cold-start
+    # cut these sequence so they only keep one cold-start item at the tail
     mcs_max, mcs_min = 0, 10 ** 6
     cs_item_seq_set = set()
     for iid in cs_item_list:
@@ -45,7 +60,8 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
         cs_item_seq_set = cs_item_seq_set.union(user_set)
     mixed_set = set(cs_user_list).intersection(cs_item_seq_set)
     for uid in mixed_set:
-        mcs_seq[uid] = User.pop(uid)
+        seq = User.pop(uid)
+        mcs_seq[uid] = sequence_cut(seq, cs_item_list)
         mcs_max, mcs_min = max(mcs_max, len(mcs_seq[uid])), min(mcs_min, len(mcs_seq[uid]))
 
     # collect the cold-start users (with least iterations)
@@ -59,18 +75,12 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     for uid in cs_item_seq_set.difference(mixed_set):
         # sequence cut-off after the last cold-start item -> allow test on cold-start item
         seq = User.pop(uid)
-        i = 0  # index of the second last cold-start item
-        j = len(seq) - 1  # index of the last cold-start item
-        # the sequence will be cut between [i+1, j]
-        while seq[j] not in cs_item_list: j -= 1
-        i = j - 1
-        while i >= 0 and seq[i] not in cs_item_list: i -= 1
-        temp_seq = seq[i+1:j+1]
-        if len(temp_seq) > ucs_max:     # all item-cold-start sample should be non-user-cold-start
-            ics_seq[uid] = temp_seq
+        seq_cut = sequence_cut(seq, cs_item_list)
+        if len(seq_cut) > ucs_max:     # all item-cold-start sample should be non-user-cold-start
+            ics_seq[uid] = seq_cut
             ics_max, ics_min = max(ics_max, len(ics_seq[uid])), min(ics_min, len(ics_seq[uid]))
         else:
-            mcs_seq[uid] = temp_seq
+            mcs_seq[uid] = seq_cut
 
     # the remaining sequences are for warm-start case
     ws_seq = User
