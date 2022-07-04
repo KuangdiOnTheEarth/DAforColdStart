@@ -20,14 +20,14 @@ def cs_data_partition(folder_name):
     valid = {}
     ws_test = {}  # the augmented samples are considered as normal training samples, i.e. same as ws samples
     ucs_test = {}
-    # the cold-start items should not appear in training set, so their model input for evaluation is stored separately
-    ics_train = {}
-    ics_valid = {}
     ics_test = {}
+    # the cold-start items should not appear in training set, so their model input for evaluation is stored separately
+    # mcs_train = {}
+    # mcs_valid = {}
     mcs_test = {}
 
-    train_map = {'da': train, 'ws': train, 'ucs': train, 'ics': ics_train, 'mcs': ics_train}
-    valid_map = {'da': valid, 'ws': valid, 'ucs': valid, 'ics': ics_valid, 'mcs': ics_valid}
+    train_map = {'da': train, 'ws': train, 'ucs': train, 'ics': train, 'mcs': train}
+    valid_map = {'da': valid, 'ws': valid, 'ucs': valid, 'ics': valid, 'mcs': valid}
     test_map = {'da': ws_test, 'ws': ws_test, 'ucs': ucs_test, 'ics': ics_test, 'mcs': mcs_test}
 
     for set_name, test_set in test_map.items():

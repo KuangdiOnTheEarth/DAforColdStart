@@ -19,11 +19,11 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
 
     f = open('data/%s.txt' % fname, 'r')
     for line in f:
-        u, i = line.rstrip().split(' ')
+        u, j = line.rstrip().split(' ')
         u = int(u)
-        i = int(i)
-        User[u].append(i)
-        Item[i].append(u)
+        j = int(j)
+        User[u].append(j)
+        Item[j].append(u)
     num_user = len(User)
     num_item = len(Item)
 
@@ -59,13 +59,18 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     for uid in cs_item_seq_set.difference(mixed_set):
         # sequence cut-off after the last cold-start item -> allow test on cold-start item
         seq = User.pop(uid)
-        i = len(seq) - 1
-        while seq[i] not in cs_item_list: i -= 1
-        if i > ucs_max:     # all item-cold-start sample should be non-user-cold-start
-            ics_seq[uid] = seq[0:i+1]
+        i = 0  # index of the second last cold-start item
+        j = len(seq) - 1  # index of the last cold-start item
+        # the sequence will be cut between [i+1, j]
+        while seq[j] not in cs_item_list: j -= 1
+        i = j - 1
+        while i >= 0 and seq[i] not in cs_item_list: i -= 1
+        temp_seq = seq[i+1:j+1]
+        if len(temp_seq) > ucs_max:     # all item-cold-start sample should be non-user-cold-start
+            ics_seq[uid] = temp_seq
             ics_max, ics_min = max(ics_max, len(ics_seq[uid])), min(ics_min, len(ics_seq[uid]))
         else:
-            mcs_seq[uid] = seq[0:i+1]
+            mcs_seq[uid] = temp_seq
 
     # the remaining sequences are for warm-start case
     ws_seq = User
