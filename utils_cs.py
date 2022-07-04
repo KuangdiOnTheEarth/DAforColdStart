@@ -103,7 +103,8 @@ def cs_evaluate(model, dataset, args):
             idx -= 1
 
             # when evaluating user cold-start, only use a fixed-number of items as model input sequence
-            ucs_input_num = 0
+            # the real # input item is (ucs_input_num + 1), since the validation item always exists in input
+            ucs_input_num = 4
             for i in reversed(train[sid]):
                 if set_name == 'ucs' and ucs_input_num <= 0: break
                 ucs_input_num -= 1

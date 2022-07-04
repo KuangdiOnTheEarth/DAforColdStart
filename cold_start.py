@@ -66,8 +66,11 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
 
     # collect the cold-start users (with least iterations)
     ucs_max, ucs_min = 0, 10 ** 6
+    # num_item_kept = 5
     for uid in set(cs_user_list).difference(mixed_set):
         ucs_seq[uid] = User.pop(uid)
+        # temp_seq = User.pop(uid)
+        # ucs_seq[uid] = temp_seq[-num_item_kept:]
         ucs_max, ucs_min = max(ucs_max, len(ucs_seq[uid])), min(ucs_min, len(ucs_seq[uid]))
 
     # collect the cold-start items (with least iterations)
