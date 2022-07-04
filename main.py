@@ -42,11 +42,14 @@ if __name__ == '__main__':
         print('-- Cold-Start Evaluation is activated --')
         print('Loading dataset ...')
         dataset = cs_data_partition(args.dataset)
+        [user_train, user_valid, user_test, usernum, itemnum] = dataset
+        user_train = user_train['ws']
+        user_valid = user_valid['ws']
     else:
         print('Loading dataset ...')
         dataset = data_partition(args.dataset)
+        [user_train, user_valid, user_test, usernum, itemnum] = dataset
 
-    [user_train, user_valid, user_test, usernum, itemnum] = dataset
     num_batch = len(user_train) // args.batch_size # tail? + ((len(user_train) % args.batch_size) != 0)
     cc = 0.0
     for u in user_train:

@@ -6,22 +6,25 @@ from collections import defaultdict
 def cs_data_partition(folder_name):
     samplenum = 0
     itemnum = 0
-    WS_Sample = defaultdict(list)
-    ICS_Sample = defaultdict(list)
-    UCS_Sample = defaultdict(list)
-    MCS_Sample = defaultdict(list)
+    # the model training is based on the samples from warm-start and user-cold-start sets
+    # with the last item stored in `*_test`, second last item stored in `valid`, prefix sequence stored in `train`
     train = {}
     valid = {}
     ws_test = {}
-    ics_test = {}
     ucs_test = {}
+    # the cold-start items should not appear in training set, so their model input for evaluation is stored separately
+    ics_train = {}
+    ics_valid = {}
+    ics_test = {}
     mcs_test = {}
-    container_map = {'ws': WS_Sample, 'ics': ICS_Sample, 'ucs': UCS_Sample, 'mcs': MCS_Sample}
-    test_map = {'ws': ws_test, 'ics': ics_test, 'ucs': ucs_test, 'mcs': mcs_test}
 
-    # read warm-start samples
-    for file_name, container in container_map.items():
-        f = open('data/%s/%s.txt' % (folder_name, file_name), 'r')
+    # container_map = {'ws': WS_Sample, 'ics': ICS_Sample, 'ucs': UCS_Sample, 'mcs': MCS_Sample}
+    train_map = {'ws': train, 'ucs': train, 'ics': ics_train, 'mcs': ics_train}
+    valid_map = {'ws': valid, 'ucs': valid, 'ics': ics_valid, 'mcs': ics_valid}
+    test_map = {'ws': ws_test, 'ucs': ucs_test, 'ics': ics_test, 'mcs': mcs_test}
+
+    for set_name, test_set in test_map.items():
+        f = open('data/%s/%s.txt' % (folder_name, set_name), 'r')
         for line in f:
             line_data = line.rstrip().split(' ')
             line_data = list(map(int, line_data))
@@ -29,37 +32,15 @@ def cs_data_partition(folder_name):
             items = line_data[2:]
             samplenum = max(sid, samplenum)
             itemnum = max(max(items), itemnum)
-            container[sid] = items
-
-    for set_name, container in container_map.items():
-        for sid, item_list in container.items():
-            nfeedback = len(item_list)
-            if nfeedback < 3:
-                train[sid] = item_list
-                valid[sid] = []
-                ws_test[sid] = []
-                ics_test[sid] = []
-                ucs_test[sid] = []
-                mcs_test[sid] = []
+            if len(items) < 3:
+                train_map[set_name][sid] = items
+                valid_map[set_name][sid] = []
+                test_set[set_name][sid] = []
             else:
-                other_sets = set(test_map.keys()).difference(set(set_name))
-                train[sid] = item_list[:-2]
-                valid[sid] = []
-                valid[sid].append(item_list[-2])
+                train_map[set_name][sid] = items[:-2]
+                valid_map[set_name][sid] = []
+                valid_map[set_name][sid].append(items[-2])
+                test_set[set_name][sid] = []
+                test_set[set_name][sid].append(items[-1])
 
-                for other in other_sets:
-                    other[sid] = []
-
-    for sample in User:
-        nfeedback = len(User[user])
-        if nfeedback < 3:
-            user_train[user] = User[user]
-            user_valid[user] = []
-            user_test[user] = []
-        else:
-            user_train[user] = User[user][:-2]
-            user_valid[user] = []
-            user_valid[user].append(User[user][-2])
-            user_test[user] = []
-            user_test[user].append(User[user][-1])
-    return [user_train, user_valid, user_test, usernum, itemnum]
+    return [train_map, valid_map, test_map, samplenum, itemnum]
