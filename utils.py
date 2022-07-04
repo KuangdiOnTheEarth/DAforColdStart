@@ -157,6 +157,9 @@ def evaluate(model, dataset, args):
 # evaluate on val set
 def evaluate_valid(model, dataset, args):
     [train, valid, test, usernum, itemnum] = copy.deepcopy(dataset)
+    if args.cold_start:  # in cold-start mode, needs to additionally fetch dataset from dataset map
+        train = train['ws']
+        valid = valid['ws']
 
     NDCG = 0.0
     valid_user = 0.0

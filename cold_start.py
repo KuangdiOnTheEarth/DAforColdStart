@@ -98,6 +98,9 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     file_list = {
         "ws": ws_seq, "ucs": ucs_seq, "ics": ics_seq, "mcs": mcs_seq
     }
+    # the ws and ucs must be placed at the beginning,
+    # as they will be used in model training, where the sampler required continuous sid starting from 1
+
     directory = 'data/' + fname
     if not os.path.exists(directory):
         os.makedirs(directory)
