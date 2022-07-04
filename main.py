@@ -39,7 +39,7 @@ f.close()
 if __name__ == '__main__':
     # global dataset
     if args.cold_start:
-        print('-- Cold-Start Evaluation is activated --')
+        print('-- Cold-Start Evaluation mode is activated --')
         print('Loading dataset ...')
         dataset = cs_data_partition(args.dataset)
         [user_train, user_valid, user_test, usernum, itemnum] = dataset
@@ -87,8 +87,16 @@ if __name__ == '__main__':
     
     if args.inference_only:
         model.eval()
-        t_test = cs_evaluate(model, dataset, args) if args.cold_start else evaluate(model, dataset, args)
-        print('test (NDCG@10: %.4f, HR@10: %.4f)' % (t_test[0], t_test[1]))
+        if args.cold_start:
+            NDCG_map, HR_map = cs_evaluate(model, dataset, args)
+            print('\nWarm-Start:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['ws'], HR_map['ws'])) # include data augmentation samples
+            print('User-CS:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['ucs'], HR_map['ucs']))
+            print('Item-CS:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['ics'], HR_map['ics']))
+            print('Mixed-CS:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['mcs'], HR_map['mcs']))
+            print('Weighted-Average:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['avg'], HR_map['avg']))
+        else:
+            t_test = evaluate(model, dataset, args)
+            print('test (NDCG@10: %.4f, HR@10: %.4f)' % (t_test[0], t_test[1]))
     
     # ce_criterion = torch.nn.CrossEntropyLoss()
     # https://github.com/NVIDIA/pix2pixHD/issues/9 how could an old bug appear again...
@@ -120,20 +128,36 @@ if __name__ == '__main__':
             t1 = time.time() - t0
             T += t1
             print('Evaluating', end='')
-            t_test = cs_evaluate(model, dataset, args) if args.cold_start else evaluate(model, dataset, args)
-            t_valid = evaluate_valid(model, dataset, args)
-            print('epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
+
+            if args.cold_start:
+                t_valid = evaluate_valid(model, dataset, args)
+                log_str = ''
+                log_str += ('\nepoch:%d, time: %f(s):\nValid: (NDCG@10: %.4f, HR@10: %.4f)\n' % (epoch, T, t_valid[0], t_valid[1]))
+                NDCG_map, HR_map = cs_evaluate(model, dataset, args)
+                log_str += 'test sets:\n'
+                log_str += ('Warm-Start: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['ws'], HR_map['ws']))  # include data augmentation samples
+                log_str += ('User-CS: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['ucs'], HR_map['ucs']))
+                log_str += ('Item-CS: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['ics'], HR_map['ics']))
+                log_str += ('Mixed-CS: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['mcs'], HR_map['mcs']))
+                log_str += ('Weighted-Average: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['avg'], HR_map['avg']))
+                print(log_str)
+                f.write(log_str)
+                f.flush()
+            else:
+                t_test = evaluate(model, dataset, args)
+                t_valid = evaluate_valid(model, dataset, args)
+                print('epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
                     % (epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
-    
-            f.write(str(t_valid) + ' ' + str(t_test) + '\n')
-            f.flush()
+                f.write(str(t_valid) + ' ' + str(t_test) + '\n')
+                f.flush()
+
             t0 = time.time()
             model.train()
     
         if epoch == args.num_epochs:
             folder = args.dataset + '_' + args.train_dir
-            fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
-            fname = fname.format(args.num_epochs, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
+            fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.cs={}.pth'
+            fname = fname.format(args.num_epochs, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen, args.cold_start)
             torch.save(model.state_dict(), os.path.join(folder, fname))
     
     f.close()

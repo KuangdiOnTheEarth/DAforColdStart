@@ -9,6 +9,8 @@ from collections import defaultdict
 
 import numpy as np
 
+from utils import evaluate
+
 
 def cs_data_partition(folder_name):
     trainsamplenum = 0
@@ -62,53 +64,84 @@ def cs_data_partition(folder_name):
 
 
 def cs_evaluate(model, dataset, args):
-    [train, valid, test, usernum, itemnum] = copy.deepcopy(dataset)
-    if args.cold_start:  # in cold-start mode, needs to additionally fetch dataset from dataset map
-        train = train['ws']
-        valid = valid['ws']
-        test = test['ws']
-        usernum = len(test) # the input `usernum`
+    if not args.cold_start:
+        print("Inappropriate use: cs_evaluate should only be called in cold_start mode")
+        print("redirect to evaluate() function used for normal case ...")
+        return evaluate(model, dataset, args)
 
-    NDCG = 0.0
-    HT = 0.0
-    valid_user = 0.0
+    [train_map, valid_map, test_map, samplenum, itemnum] = copy.deepcopy(dataset)
 
-    if usernum>10000:
-        users = random.sample(range(1, usernum + 1), 10000)
-    else:
-        users = range(1, usernum + 1)
-    for u in users:
+    NDCG_map = {}
+    HR_map = {}
+    total_samples = 0 # used to calculate avg NDCG and HR
+    avg_NDCG_numerator = 0 # used to calculate avg NDCG and HR
+    avg_HR_numerator = 0 # used to calculate avg NDCG and HR
 
-        if len(train[u]) < 1 or len(test[u]) < 1: continue
+    for set_name in ['ws', 'ucs', 'ics', 'mcs']:
+        train = train_map[set_name]
+        valid = valid_map[set_name]
+        test = test_map[set_name]
+        NDCG = 0.0
+        HT = 0.0
+        valid_user = 0.0
 
-        seq = np.zeros([args.maxlen], dtype=np.int32)
-        idx = args.maxlen - 1
-        seq[idx] = valid[u][0]
-        idx -= 1
-        for i in reversed(train[u]):
-            seq[idx] = i
+        sid_list = test.keys()
+        samplenum = len(test)
+        if samplenum>10000:
+            index_list = random.sample(range(1, samplenum + 1), 10000)
+            temp = []
+            for idx in index_list:
+                temp.append(sid_list[idx])
+            sid_list = temp
+
+        for sid in sid_list:
+            if len(train[sid]) < 1 or len(test[sid]) < 1: continue
+
+            seq = np.zeros([args.maxlen], dtype=np.int32)
+            idx = args.maxlen - 1
+            seq[idx] = valid[sid][0]
             idx -= 1
-            if idx == -1: break
-        rated = set(train[u])
-        rated.add(0)
-        item_idx = [test[u][0]]
-        for _ in range(100):
-            t = np.random.randint(1, itemnum + 1)
-            while t in rated: t = np.random.randint(1, itemnum + 1)
-            item_idx.append(t)
 
-        predictions = -model.predict(*[np.array(l) for l in [[u], [seq], item_idx]])
-        predictions = predictions[0] # - for 1st argsort DESC
+            # when evaluating user cold-start, only use a fixed-number of items as model input sequence
+            ucs_input_num = 0
+            for i in reversed(train[sid]):
+                if set_name == 'ucs' and ucs_input_num <= 0: break
+                ucs_input_num -= 1
+                seq[idx] = i
+                idx -= 1
+                if idx == -1: break
 
-        rank = predictions.argsort().argsort()[0].item()
+            rated = set(train[sid])
+            rated.add(0)
+            item_idx = [test[sid][0]]
+            for _ in range(100):
+                t = np.random.randint(1, itemnum + 1)
+                while t in rated: t = np.random.randint(1, itemnum + 1)
+                item_idx.append(t)
 
-        valid_user += 1
+            predictions = -model.predict(*[np.array(l) for l in [[sid], [seq], item_idx]])
+            predictions = predictions[0] # - for 1st argsort DESC
 
-        if rank < 10:
-            NDCG += 1 / np.log2(rank + 2)
-            HT += 1
-        if valid_user % 100 == 0:
-            print('.', end="")
-            sys.stdout.flush()
+            rank = predictions.argsort().argsort()[0].item()
 
-    return NDCG / valid_user, HT / valid_user
+            valid_user += 1
+
+            if rank < 10:
+                NDCG += 1 / np.log2(rank + 2)
+                HT += 1
+            if valid_user % 100 == 0:
+                print('.', end="")
+                sys.stdout.flush()
+
+        NDCG_map[set_name] = NDCG / valid_user
+        HR_map[set_name] = HT / valid_user
+
+        avg_NDCG_numerator += NDCG_map[set_name] * valid_user
+        avg_HR_numerator += HR_map[set_name] * valid_user
+        total_samples += valid_user
+
+    # calculate the weighted average over all samples across test sets
+    NDCG_map['avg'] = avg_NDCG_numerator / total_samples
+    HR_map['avg'] = avg_HR_numerator / total_samples
+
+    return NDCG_map, HR_map
