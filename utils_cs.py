@@ -23,12 +23,13 @@ def cs_data_partition(folder_name):
     for file_name, container in container_map.items():
         f = open('data/%s/%s.txt' % (folder_name, file_name), 'r')
         for line in f:
-            s, u, i = line.rstrip().split(' ')
-            s = int(s)
-            i = int(i)
-            samplenum = max(u, samplenum)
-            itemnum = max(i, itemnum)
-            container[s].append(i)
+            line_data = line.rstrip().split(' ')
+            line_data = list(map(int, line_data))
+            sid = int(line_data[0])
+            items = line_data[2:]
+            samplenum = max(sid, samplenum)
+            itemnum = max(max(items), itemnum)
+            container[sid] = items
 
     for set_name, container in container_map.items():
         for sid, item_list in container.items():
