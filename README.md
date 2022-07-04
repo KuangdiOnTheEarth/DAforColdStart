@@ -1,3 +1,4 @@
+Introduction:
 This Git repository is the Python implementation of my MSc project *Improving Cold-Start Ability of Sequential Recommenders using Data Augmentation*.
 
 The baseline recommender is a self-attentive model called SASRec, with the reference to the original paper attached below.
@@ -18,13 +19,13 @@ In this project, the code implementation uses pytorch framework, and has referre
 
 ---
 
-Versions:
+Version:
 - CUDA: 10.2
 - pytorch: 1.6
 
 ---
 
-Scripts:
+Script:
 - `cold_start.py`: the main script for functionalities 
 - `utils_cs.py`: contains the modified versions of functions from `utils.py`, these functions are used to supports the cold-start training and evaluation.
 ---

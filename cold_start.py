@@ -118,5 +118,18 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
         f.write('%d\n' % iid)
     f.close()
 
+    # print the meta information into file
+    f = open('data/%s/%s.txt' % (fname, 'meta'), 'w')
+    f.write("Original dataset: %d users and %d items\n" % (num_user, num_item))
+    f.write("-------------------------------------------------\n")
+    f.write("Cold-Start User Proportion: %f\n" % cs_user_prop)
+    f.write("Cold-Start Item Proportion: %f\n" % cs_item_prop)
+    f.write("-------------------------------------------------\n")
+    f.write("Warm-Start:\t\t\t%d samples\n" % len(ws_seq))
+    f.write("User-Cold-Start:\t%d samples, length between %d ~ %d\n" % (len(ucs_seq), ucs_min, ucs_max))
+    f.write("Item-Cold-Start:\t%d samples, length between %d ~ %d\n" % (len(ics_seq), ics_min, ics_max))
+    f.write("Mixed-Cold-Start:\t%d samples, length between %d ~ %d\n" % (len(mcs_seq), mcs_min, mcs_max))
+    f.close()
+
 if __name__ == '__main__':
     get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.1)
