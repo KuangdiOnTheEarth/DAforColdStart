@@ -9,7 +9,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from utils import evaluate
+from SASRec_pytorch.utils import evaluate
 
 
 def cs_data_partition(folder_name):
