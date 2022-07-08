@@ -48,10 +48,16 @@ def cs_data_partition(folder_name):
             # if set_name == 'ws' or set_name == 'ucs':  # only count the maximum sid in ws and ucs sets
             #     trainsamplenum = max(sid, trainsamplenum)
             itemnum = max(max(items), itemnum)
-            if len(items) < 3:
-                train_map[set_name][sid] = items
-                valid_map[set_name][sid] = []
+            if len(items) < 3: # if there are less than 3 items, use them as test set
+                # train_map[set_name][sid] = items
+                # valid_map[set_name][sid] = []
+                # test_map[set_name][sid] = []
                 test_map[set_name][sid] = []
+                test_map[set_name][sid].append(items[-1])
+                valid_map[set_name][sid] = []
+                if len(items) == 2:
+                    valid_map[set_name][sid].append(items[-2])
+                train_map[set_name][sid] = []
             else:
                 train_map[set_name][sid] = items[:-2]
                 valid_map[set_name][sid] = []
@@ -85,29 +91,30 @@ def cs_evaluate(model, dataset, args):
         HT = 0.0
         valid_user = 0.0
 
-        sid_list = test.keys()
+        sid_list = list(test.keys())
         samplenum = len(test)
         if samplenum>10000:
-            index_list = random.sample(range(1, samplenum + 1), 10000)
+            index_list = random.sample(range(0, samplenum), 10000)
             temp = []
             for idx in index_list:
                 temp.append(sid_list[idx])
             sid_list = temp
 
         for sid in sid_list:
-            if len(train[sid]) < 1 or len(test[sid]) < 1: continue
+            if len(test[sid]) < 1: continue
+            # if (len(train[sid]) + len(valid[sid])) < 1 or len(test[sid]) < 1: continue
 
             seq = np.zeros([args.maxlen], dtype=np.int32)
             idx = args.maxlen - 1
-            seq[idx] = valid[sid][0]
+            seq[idx] = valid[sid][0] if len(valid[sid]) > 0 else 0
             idx -= 1
 
             # when evaluating user cold-start, only use a fixed-number of items as model input sequence
             # the real # input item is (ucs_input_num + 1), since the validation item always exists in input
-            ucs_input_num = 4
+            # ucs_input_num = 4
             for i in reversed(train[sid]):
-                if set_name == 'ucs' and ucs_input_num <= 0: break
-                ucs_input_num -= 1
+                # if set_name == 'ucs' and ucs_input_num <= 0: break
+                # ucs_input_num -= 1
                 seq[idx] = i
                 idx -= 1
                 if idx == -1: break

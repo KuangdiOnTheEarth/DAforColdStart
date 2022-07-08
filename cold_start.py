@@ -23,7 +23,7 @@ def sequence_cut(sequence, csi_list):
     while sequence[j] not in csi_list: j += 1
     return sequence[0:j + 1]
 
-def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
+def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2):
     user_count = {}  # number of interactions for each user
     item_count = {}  # number of interactions on each item
     User = defaultdict(list)  # the list of interacted items for each user
@@ -53,6 +53,8 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
           "; # interactions between: " + str(len(User[sorted_user_list[0]])) + " ~ " + str(
         len(User[sorted_user_list[-1]])))
 
+    ucs_len_threshold = len(User[cs_user_list[-1]])
+    ucs_max_len = int(ucs_max_len_prop * ucs_len_threshold)
     # find out training samples that are both user & item cold-start
     # cut these sequence so they only keep one cold-start item at the tail
     mcs_max, mcs_min = 0, 10 ** 6
@@ -68,7 +70,6 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
 
     # collect the cold-start users (with least iterations)
     ucs_max, ucs_min = 0, 10 ** 6
-    ucs_max_len = 10
     for uid in set(cs_user_list).difference(mixed_set):
         # ucs_seq[uid] = User.pop(uid)
         temp_seq = User.pop(uid)
@@ -155,4 +156,6 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     f.close()
 
 if __name__ == '__main__':
-    get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.1)
+    get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.1, ucs_max_len_prop=0.2)
+    # get_cold_user_item("Steam", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
+    # get_cold_user_item("Video", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
