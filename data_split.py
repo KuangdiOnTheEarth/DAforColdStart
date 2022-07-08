@@ -23,7 +23,7 @@ def sequence_cut(sequence, csi_list):
     while sequence[j] not in csi_list: j += 1
     return sequence[0:j + 1]
 
-def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2):
+def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len=10):
     user_count = {}  # number of interactions for each user
     item_count = {}  # number of interactions on each item
     User = defaultdict(list)  # the list of interacted items for each user
@@ -45,9 +45,9 @@ def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_
     for line in f:
         line_seg = line.rstrip().split(' ')
         u = int(line_seg[0])
-        for j in line_seg[1:]:
-            User[u].append(int(j))
-            Item[int(j)].append(u)
+        for i in line_seg[1:]:
+            User[u].append(int(i))
+            Item[int(i)].append(u)
 
     num_user = len(User)
     num_item = len(Item)
@@ -63,7 +63,7 @@ def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_
         len(User[sorted_user_list[-1]])))
 
     ucs_len_threshold = len(User[cs_user_list[-1]])
-    ucs_max_len = int(ucs_max_len_prop * ucs_len_threshold)
+
     # find out training samples that are both user & item cold-start
     # cut these sequence so they only keep one cold-start item at the tail
     mcs_max, mcs_min = 0, 10 ** 6
@@ -91,7 +91,7 @@ def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_
         # sequence cut-off after the last cold-start item -> allow test on cold-start item
         seq = User.pop(uid)
         seq_cut = sequence_cut(seq, cs_item_list)
-        if len(seq_cut) > ucs_max:     # all item-cold-start sample should be non-user-cold-start
+        if len(seq_cut) > ucs_len_threshold:     # all item-cold-start sample should be non-user-cold-start
             ics_seq[uid] = seq_cut
             ics_max, ics_min = max(ics_max, len(ics_seq[uid])), min(ics_min, len(ics_seq[uid]))
         else:
@@ -166,6 +166,6 @@ def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_
     f.close()
 
 if __name__ == '__main__':
-    get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
+    get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len=7)
     # get_cold_user_item("Steam", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
     # get_cold_user_item("Video", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
