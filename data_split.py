@@ -96,6 +96,7 @@ def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_
             ics_max, ics_min = max(ics_max, len(ics_seq[uid])), min(ics_min, len(ics_seq[uid]))
         else:
             mcs_seq[uid] = seq_cut
+            mcs_max, mcs_min = max(mcs_max, len(seq_cut)), min(mcs_min, len(seq_cut))
 
     # the remaining sequences are for warm-start case
     ws_seq = User
