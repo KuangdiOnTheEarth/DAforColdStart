@@ -9,17 +9,19 @@ parser.add_argument('--cs_dataset')
 
 def sequence_cut(sequence, csi_list):
     '''
-    Cut the sequence after the last and second-last (if exists) cold-start items, return the middle part
+    Cut the sequence from the head to the first cold-start items
     This function is used to generate the mixed-cold-start samples,
     whose length is shorter than the user-cold-start threshold, and contain one and only one cold-start item at tail.
     '''
-    i = 0  # index of the second last cold-start item
-    j = len(sequence) - 1  # index of the last cold-start item
-    # the sequence will be cut between [i+1, j] (both sides included)
-    while sequence[j] not in csi_list: j -= 1
-    i = j - 1
-    while i >= 0 and sequence[i] not in csi_list: i -= 1
-    return sequence[i + 1:j + 1]
+    # i = 0  # index of the second last cold-start item
+    # j = len(sequence) - 1  # index of the last cold-start item
+    # # the sequence will be cut between [i+1, j] (both sides included)
+    # while sequence[j] not in csi_list: j -= 1
+    # i = j - 1
+    # while i >= 0 and sequence[i] not in csi_list: i -= 1
+    j = 0
+    while sequence[j] not in csi_list: j += 1
+    return sequence[0:j + 1]
 
 def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
     user_count = {}  # number of interactions for each user
@@ -66,11 +68,11 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2):
 
     # collect the cold-start users (with least iterations)
     ucs_max, ucs_min = 0, 10 ** 6
-    # num_item_kept = 5
+    ucs_max_len = 10
     for uid in set(cs_user_list).difference(mixed_set):
-        ucs_seq[uid] = User.pop(uid)
-        # temp_seq = User.pop(uid)
-        # ucs_seq[uid] = temp_seq[-num_item_kept:]
+        # ucs_seq[uid] = User.pop(uid)
+        temp_seq = User.pop(uid)
+        ucs_seq[uid] = temp_seq[0:ucs_max_len] if ucs_max < len(temp_seq) else temp_seq
         ucs_max, ucs_min = max(ucs_max, len(ucs_seq[uid])), min(ucs_min, len(ucs_seq[uid]))
 
     # collect the cold-start items (with least iterations)
