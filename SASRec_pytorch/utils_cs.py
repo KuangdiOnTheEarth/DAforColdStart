@@ -12,7 +12,7 @@ import numpy as np
 from SASRec_pytorch.utils import evaluate
 
 
-def cs_data_partition(folder_name):
+def cs_data_partition(dataset):
     trainsamplenum = 0
     # the number of samples for model training, i.e. all sequences in warm-start and user-cold-start sets
     itemnum = 0
@@ -33,7 +33,7 @@ def cs_data_partition(folder_name):
     test_map = {'da': ws_test, 'ws': ws_test, 'ucs': ucs_test, 'ics': ics_test, 'mcs': mcs_test}
 
     for set_name, test_set in test_map.items():
-        file_path = 'data/%s/%s.txt' % (folder_name, set_name)
+        file_path = 'data/%s/splits/%s.txt' % (dataset, set_name)
         # in case data augmentation set not exists
         if not os.path.exists(file_path):
             print("No data augmentation is detected")

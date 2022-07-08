@@ -23,7 +23,7 @@ def sequence_cut(sequence, csi_list):
     while sequence[j] not in csi_list: j += 1
     return sequence[0:j + 1]
 
-def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2):
+def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2):
     user_count = {}  # number of interactions for each user
     item_count = {}  # number of interactions on each item
     User = defaultdict(list)  # the list of interacted items for each user
@@ -33,13 +33,22 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_pr
     mcs_seq = {}  # test set for evaluating mixed cold-start cases: cold-start user interacted with cold-start items
     ws_seq = {}   # test set for evaluating warm-start cases
 
-    f = open('data/%s.txt' % fname, 'r')
+    # f = open('data/%s.txt' % fname, 'r')
+    # for line in f:
+    #     u, j = line.rstrip().split(' ')
+    #     u = int(u)
+    #     j = int(j)
+    #     User[u].append(j)
+    #     Item[j].append(u)
+
+    f = open('data/%s/formatted/sequences.txt' % dataset, 'r')
     for line in f:
-        u, j = line.rstrip().split(' ')
-        u = int(u)
-        j = int(j)
-        User[u].append(j)
-        Item[j].append(u)
+        line_seg = line.rstrip().split(' ')
+        u = int(line_seg[0])
+        for j in line_seg[1:]:
+            User[u].append(int(j))
+            Item[int(j)].append(u)
+
     num_user = len(User)
     num_item = len(Item)
 
@@ -122,11 +131,11 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_pr
     # the ws and ucs must be placed at the beginning,
     # as they will be used in model training, where the sampler required continuous sid starting from 1
 
-    directory = 'data/' + fname
+    directory = os.path.join('data', dataset, "splits")
     if not os.path.exists(directory):
         os.makedirs(directory)
     for name, dataset in file_list.items():
-        f = open('data/%s/%s.txt' % (fname, name), 'w')
+        f = open('%s/%s.txt' % (directory, name), 'w')
         for uid, item_list in dataset.items():
             sample_id += 1
             line_str = str(sample_id) + ' ' + str(uid)
@@ -137,13 +146,13 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_pr
         f.close()
 
     # write the list of cold-start items into file
-    f = open('data/%s/%s.txt' % (fname, 'cs_item_list'), 'w')
+    f = open('%s/%s.txt' % (directory, 'cs_item_list'), 'w')
     for iid in cs_item_list:
         f.write('%d\n' % iid)
     f.close()
 
     # print the meta information into file
-    f = open('data/%s/%s.txt' % (fname, 'meta'), 'w')
+    f = open('%s/%s.txt' % (directory, 'meta'), 'w')
     f.write("Original dataset: %d users and %d items\n" % (num_user, num_item))
     f.write("-------------------------------------------------\n")
     f.write("Cold-Start User Proportion: %f\n" % cs_user_prop)
@@ -156,6 +165,6 @@ def get_cold_user_item(fname, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_pr
     f.close()
 
 if __name__ == '__main__':
-    get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.1, ucs_max_len_prop=0.2)
+    get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
     # get_cold_user_item("Steam", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
     # get_cold_user_item("Video", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
