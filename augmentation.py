@@ -40,7 +40,7 @@ if __name__ == '__main__':
         src_seq = dataset[sid]
 
         if args.method == 'SeqSplit':
-            if len(src_seq) == 0: continue
+            if len(src_seq) < 2: continue
             generated_count += min(len(src_seq), args.max_len)
             new_sample = str(src_seq[0])
             for i in range(1, min(len(src_seq), args.max_len)):

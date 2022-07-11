@@ -30,13 +30,17 @@ def cs_data_partition(dataset):
 
     train_map = {'da': train, 'ws': train, 'ucs': train, 'ics': train, 'mcs': train}
     valid_map = {'da': valid, 'ws': valid, 'ucs': valid, 'ics': valid, 'mcs': valid}
-    test_map = {'da': ws_test, 'ws': ws_test, 'ucs': ucs_test, 'ics': ics_test, 'mcs': mcs_test}
+    test_map = {'da': None, 'ws': ws_test, 'ucs': ucs_test, 'ics': ics_test, 'mcs': mcs_test}
 
     for set_name, test_set in test_map.items():
-        file_path = 'data/%s/splits/%s.txt' % (dataset, set_name)
+        if set_name != 'da':
+            file_path = 'data/%s/splits/%s.txt' % (dataset, set_name)
+        else:
+            augmentation_file = 'ml-1m.da.SeqSplit.per=0.2.maxlen=39'
+            file_path = 'data/%s/augmentation/%s.txt' % (dataset, augmentation_file)
         # in case data augmentation set not exists
         if not os.path.exists(file_path):
-            print("No data augmentation is detected")
+            print("File for %s is not detected" % set_name)
             continue
         f = open(file_path, 'r')
         print("Reading %s set ..." % set_name)
@@ -48,22 +52,28 @@ def cs_data_partition(dataset):
             # if set_name == 'ws' or set_name == 'ucs':  # only count the maximum sid in ws and ucs sets
             #     trainsamplenum = max(sid, trainsamplenum)
             itemnum = max(max(items), itemnum)
-            if len(items) < 3: # if there are less than 3 items, use them as test set
-                # train_map[set_name][sid] = items
-                # valid_map[set_name][sid] = []
-                # test_map[set_name][sid] = []
-                test_map[set_name][sid] = []
-                test_map[set_name][sid].append(items[-1])
-                valid_map[set_name][sid] = []
-                if len(items) == 2:
+            if set_name != 'da':
+                if len(items) < 3: # if there are less than 3 items, use them as test set
+                    # train_map[set_name][sid] = items
+                    # valid_map[set_name][sid] = []
+                    # test_map[set_name][sid] = []
+                    test_map[set_name][sid] = []
+                    test_map[set_name][sid].append(items[-1])
+                    valid_map[set_name][sid] = []
+                    if len(items) == 2:
+                        valid_map[set_name][sid].append(items[-2])
+                    train_map[set_name][sid] = []
+                else:
+                    train_map[set_name][sid] = items[:-2]
+                    valid_map[set_name][sid] = []
                     valid_map[set_name][sid].append(items[-2])
-                train_map[set_name][sid] = []
+                    test_map[set_name][sid] = []
+                    test_map[set_name][sid].append(items[-1])
             else:
-                train_map[set_name][sid] = items[:-2]
+                # load augmentation samples only for training and validation
+                train_map[set_name][sid] = items[:-1]
                 valid_map[set_name][sid] = []
-                valid_map[set_name][sid].append(items[-2])
-                test_map[set_name][sid] = []
-                test_map[set_name][sid].append(items[-1])
+                valid_map[set_name][sid].append(items[-1])
     trainsamplenum = len(train)
 
     return [train_map, valid_map, test_map, trainsamplenum, itemnum]
