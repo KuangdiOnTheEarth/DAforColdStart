@@ -28,6 +28,7 @@ parser.add_argument('--device', default='cpu', type=str)
 parser.add_argument('--inference_only', default=False, type=str2bool)
 parser.add_argument('--state_dict_path', default=None, type=str)
 parser.add_argument('--cold_start', default=False, type=str2bool)
+parser.add_argument('--da_file', default='', type=str)
 parser.add_argument('--output_dir', default='output', type=str)
 
 args = parser.parse_args()
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     if args.cold_start:
         print('-- Cold-Start Evaluation mode is activated --')
         print('Loading dataset ...')
-        dataset = cs_data_partition(args.dataset)
+        dataset = cs_data_partition(args.dataset, args.da_file)
         [user_train, user_valid, user_test, usernum, itemnum] = dataset
         user_train = user_train['ws']
         user_valid = user_valid['ws']

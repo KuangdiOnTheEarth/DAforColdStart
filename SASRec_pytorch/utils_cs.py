@@ -12,7 +12,7 @@ import numpy as np
 from SASRec_pytorch.utils import evaluate
 
 
-def cs_data_partition(dataset):
+def cs_data_partition(dataset, da_file):
     trainsamplenum = 0
     # the number of samples for model training, i.e. all sequences in warm-start and user-cold-start sets
     itemnum = 0
@@ -36,8 +36,10 @@ def cs_data_partition(dataset):
         if set_name != 'da':
             file_path = 'data/%s/splits/%s.txt' % (dataset, set_name)
         else:
-            augmentation_file = 'ml-1m.da.SeqSplit.per=0.2.maxlen=39'
-            file_path = 'data/%s/augmentation/%s.txt' % (dataset, augmentation_file)
+            if da_file == '':
+                print("Augmentation file not provided")
+                continue
+            file_path = 'data/%s/augmentation/%s' % (dataset, da_file)
         # in case data augmentation set not exists
         if not os.path.exists(file_path):
             print("File for %s is not detected" % set_name)

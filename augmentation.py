@@ -39,6 +39,15 @@ if __name__ == '__main__':
     for sid in src_sid_list:
         src_seq = dataset[sid]
 
+        # if args.method == 'SeqSplit':
+        #     if len(src_seq) < 2: continue
+        #     generated_count += min(len(src_seq), args.max_len)
+        #     new_sample = str(src_seq[0])
+        #     for i in range(1, min(len(src_seq), args.max_len)):
+        #         da_id += 1
+        #         new_sample += (' ' + str(src_seq[i]))
+        #         output_f.write("%d %d %s\n" % (da_id, sid, new_sample))
+
         if args.method == 'SeqSplit':
             if len(src_seq) < 2: continue
             generated_count += min(len(src_seq), args.max_len)
