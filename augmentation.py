@@ -49,14 +49,19 @@ if __name__ == '__main__':
         #         output_f.write("%d %d %s\n" % (da_id, sid, new_sample))
 
         if args.method == 'SeqSplit':
-            if len(src_seq) < 2: continue
-            generated_count += min(len(src_seq), args.max_len)
-            new_sample = str(src_seq[0])
-            for i in range(1, min(len(src_seq), args.max_len)):
+            org_len = len(src_seq)
+            cutoff = [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]
+            new_lens = set([int(org_len*i) for i in cutoff])
+            print(new_lens)
+
+            for i in new_lens:
+                if i < 2: continue
                 da_id += 1
-                new_sample += (' ' + str(src_seq[i]))
+                new_sample = str(src_seq[0])
+                for j in range(1,i):
+                    new_sample += (' ' + str(src_seq[j]))
                 output_f.write("%d %d %s\n" % (da_id, sid, new_sample))
 
 
-    print("%d samples are generated" % generated_count)
+    print("%d samples are generated" % (da_id-raw_num))
     output_f.close()

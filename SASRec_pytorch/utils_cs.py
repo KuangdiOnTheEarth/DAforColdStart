@@ -73,9 +73,12 @@ def cs_data_partition(dataset, da_file):
                     test_map[set_name][sid].append(items[-1])
             else:
                 # load augmentation samples only for training and validation
-                train_map[set_name][sid] = items[:-1]
                 valid_map[set_name][sid] = []
                 valid_map[set_name][sid].append(items[-1])
+                if len(items) > 1:
+                    train_map[set_name][sid] = items[:-1]
+                else:
+                    train_map[set_name][sid] = []
     trainsamplenum = len(train)
 
     return [train_map, valid_map, test_map, trainsamplenum, itemnum]
