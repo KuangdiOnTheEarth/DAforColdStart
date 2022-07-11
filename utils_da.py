@@ -1,12 +1,12 @@
 import os.path
 
 
-def load_data(folder):
-    dataset = []
+def load_data(dataset_name):
+    dataset = {}
     files = ['ws', 'ucs', 'ics', 'mcs']
     for file in files:
-        path = os.path.join(folder, file + '.txt')
-        for line in open(file):
+        file_path = 'data/%s/splits/%s.txt' % (dataset_name, file)
+        for line in open(file_path):
             line_data = line.rstrip().split(' ')
             line_data = list(map(int, line_data))
             sid = line_data[0]
@@ -16,5 +16,5 @@ def load_data(folder):
                 seq = items[0:-2]
             else:
                 seq = []
-            dataset.append(seq)
+            dataset[sid] = seq
     return dataset

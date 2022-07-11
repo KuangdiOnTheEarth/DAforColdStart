@@ -25,20 +25,29 @@ if __name__ == '__main__':
     output_f = open(output_path, 'w')
 
     # training set of all splits (validation and testing items are removed)
-    dataset = utils_da.load_data(os.path.join('data', args.dataset, 'splits'))
+    dataset = utils_da.load_data(args.dataset)
 
+    raw_num = len(dataset)
     src_num = int(len(dataset) * args.percentage)  # number of samples DA methods will be applied on
-    src_list = random.sample(range(0, len(dataset)), src_num)
+    src_sid_list = random.sample(range(1, len(dataset)+1), src_num)
 
-    print("%d training samples are loaded, with percentage %d, "
+    print("%d training samples are loaded, with percentage %f, "
           "%d samples are selected" % (len(dataset), args.percentage, src_num))
 
-    da_count = 0
-
-    for idx in src_list:
-        src_seq = dataset[idx]
+    generated_count = 0
+    da_id = raw_num
+    for sid in src_sid_list:
+        src_seq = dataset[sid]
 
         if args.method == 'SeqSplit':
-            for i in range(len(src_seq)):
-                pass
+            if len(src_seq) == 0: continue
+            generated_count += min(len(src_seq), args.max_len)
+            new_sample = str(src_seq[0])
+            for i in range(1, min(len(src_seq), args.max_len)):
+                da_id += 1
+                new_sample += (' ' + str(src_seq[i]))
+                output_f.write("%d %d %s\n" % (da_id, sid, new_sample))
+
+
+    print("%d samples are generated" % generated_count)
     output_f.close()
