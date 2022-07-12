@@ -50,7 +50,8 @@ if __name__ == '__main__':
 
         if args.method == 'SeqSplit':
             org_len = len(src_seq)
-            cutoff = [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]
+            # cutoff = [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]
+            cutoff = [0.05, 0.15, 0.25, 0.35, 0.45]
             new_lens = set([int(org_len*i) for i in cutoff])
             print(new_lens)
 

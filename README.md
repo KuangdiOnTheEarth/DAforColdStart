@@ -26,18 +26,20 @@ Version:
 ---
 
 Script:
-- `cold_start.py`: the main script for functionalities 
+- `formate_ml-1m.py`: process raw datasets (e.g. extract the user behaviour sequences and item list).
+- `data_split.py`: identify the cold-start users and items, split the sequences in to four splits: ws, ucs, ics, mcs.
 - `utils_cs.py`: contains the modified versions of functions from `utils.py`, these functions are used to supports the cold-start training and evaluation.
 ---
 
 Execution:
-
-Execute `cold_start.py` for dataset splitting, preprocessing and data augmentation; then run the `main.py` for recommender training and evaluation.
-
+1. Execute `formate_ml-1m` and `data_split.py` for dataset preprocessing and splitting. 
+2. Use `augmentation.py` to apply different data augmentation methods.
+3. Run `SASRec.py` for training and evaluation on the SASRec model, use `--cold_start=true` flag to activate the cold-start mode (otherwise the mode just works as original).
+E.g. Train a SASRec model with a specified data augmentation file:
 
 E.g. Run a pretrained model, evaluate its performance only:
 ```
-python main.py --device=cuda --dataset=ml-1m --train_dir=default --state_dict_path='ml-1m_default/SASRec.epoch=601.lr=0.001.layer=2.head=1.hidden=50.maxlen=200.pth' --inference_only=true --maxlen=200
+python SASRec.py --device=cuda --dataset=ml-1m --train_dir=default --state_dict_path='ml-1m_default/SASRec.epoch=601.lr=0.001.layer=2.head=1.hidden=50.maxlen=200.pth' --inference_only=true --maxlen=200
 
 ```
 
