@@ -166,6 +166,7 @@ def get_cold_user_item(dataset, cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len=
     f.close()
 
 if __name__ == '__main__':
-    get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len=7)
+    # get_cold_user_item("ml-1m", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len=7)
     # get_cold_user_item("Steam", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
-    # get_cold_user_item("Video", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len_prop=0.2)
+    get_cold_user_item("Beauty", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len=7)
+    # get_cold_user_item("Video", cs_user_prop=0.2, cs_item_prop=0.2, ucs_max_len=7)
