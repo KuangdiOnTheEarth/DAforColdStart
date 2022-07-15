@@ -16,6 +16,7 @@ parser.add_argument('--max_len', default=30, type=int)
 
 # settings for Synonym Replacement method
 parser.add_argument('--replace_percentage', default=0.1, type=float)
+parser.add_argument('--max_replace', default=5, type=int)
 
 args = parser.parse_args()
 
@@ -28,8 +29,8 @@ if __name__ == '__main__':
         fname = '{}.da.{}.per={}.maxlen={}.txt'
         fname = fname.format(args.dataset, args.method, args.percentage, args.max_len)
     elif args.method == 'SynRep':
-        fname = '{}.da.{}.rep_per={}.txt'
-        fname = fname.format(args.dataset, args.method, args.replace_percentage)
+        fname = '{}.da.{}.rep_per={}.max_rep={}.txt'
+        fname = fname.format(args.dataset, args.method, args.replace_percentage, args.max_replace)
     output_path = os.path.join('data', args.dataset, 'augmentation', fname)
     output_f = open(output_path, 'w')
 
@@ -84,7 +85,7 @@ if __name__ == '__main__':
             possible_positions = list(possible_positions)
 
             app_num = len(possible_positions)  # total number of appearances of similar items of this cs item
-            pos_num = math.ceil(app_num * args.replace_percentage)  # number of appearances need to be replaced
+            pos_num = min(args.max_replace, math.ceil(app_num * args.replace_percentage))  # number of appearances need to be replaced
             print("cs item %d: %d appearances for similar items, %d to be replaced" % (cs_id, app_num, pos_num))
             selected_app_idx_list = random.sample(range(0, app_num), pos_num)
             for app_idx in selected_app_idx_list:
