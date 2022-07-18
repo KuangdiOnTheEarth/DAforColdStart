@@ -1,5 +1,7 @@
 import os
 import time
+from copy import deepcopy
+
 import torch
 import argparse
 
@@ -59,6 +61,9 @@ if __name__ == '__main__':
     print('average sequence length: %.2f' % (cc / len(user_train)))
     
     f = open(os.path.join(args.output_dir, args.dataset + '_' + args.train_dir, 'log.txt'), 'w')
+    f.write("%s - %s\nMaxLen=%d, Dropout=%f\nAugmentation dataset: %s\n"
+            % ("SASRec", args.dataset, args.maxlen, args.dropout_rate, args.da_file))
+    f.flush()
     
     sampler = WarpSampler(user_train, usernum, itemnum, batch_size=args.batch_size, maxlen=args.maxlen, n_workers=3)
     model = SASRec(usernum, itemnum, args).to(args.device) # no ReLU activation in original SASRec implementation?
@@ -107,6 +112,10 @@ if __name__ == '__main__':
     
     T = 0.0
     t0 = time.time()
+
+    best_valid = 0
+    best_epoch = 0
+    best_model_state_dict = None
     
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
         if args.inference_only: break # just to decrease identition
@@ -145,6 +154,11 @@ if __name__ == '__main__':
                 print(log_str)
                 f.write(log_str)
                 f.flush()
+
+                if t_valid[0] > best_valid:
+                    best_epoch = epoch
+                    best_valid = t_valid[0]
+                    best_model_state_dict = deepcopy(model.state_dict())
             else:
                 t_test = evaluate(model, dataset, args)
                 t_valid = evaluate_valid(model, dataset, args)
@@ -160,7 +174,10 @@ if __name__ == '__main__':
             folder = os.path.join(args.output_dir, args.dataset + '_' + args.train_dir)
             fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.cs={}.pth'
             fname = fname.format(args.num_epochs, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen, args.cold_start)
-            torch.save(model.state_dict(), os.path.join(folder, fname))
+            # torch.save(model.state_dict(), os.path.join(folder, fname))
+            torch.save(best_model_state_dict, os.path.join(folder, fname))
+            f.write("\nBest epoch: %d, validation NDCG@10=%f" % (best_epoch, best_valid))
+            f.flush()
     
     f.close()
     sampler.close()
