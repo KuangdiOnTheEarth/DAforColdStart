@@ -14,6 +14,9 @@ parser.add_argument('--percentage', default=0.2, type=float)
 # settings for Sequence Split method
 parser.add_argument('--max_len', default=30, type=int)
 
+# settings for Random Split method
+parser.add_argument('--cut_points', default=5, type=int)
+
 # settings for Synonym Replacement method
 parser.add_argument('--replace_percentage', default=0.1, type=float)
 parser.add_argument('--max_replace', default=5, type=int)
@@ -21,13 +24,16 @@ parser.add_argument('--max_replace', default=5, type=int)
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    da_methods = ['SeqSplit', 'SynRep', 'Mixed']
+    da_methods = ['SeqSplit', 'RandSplit', 'SynRep', 'Mixed']
     if args.method not in da_methods:
         print("Illegal data augmentation method, select from " + str(da_methods))
 
     if args.method == 'SeqSplit':
         fname = '{}.da.{}.per={}.maxlen={}.txt'
         fname = fname.format(args.dataset, args.method, args.percentage, args.max_len)
+    elif args.method == 'RandSplit':
+        fname = '{}.da.{}.per={}.cut_points={}.txt'
+        fname = fname.format(args.dataset, args.method, args.percentage, args.cut_points)
     elif args.method == 'SynRep':
         fname = '{}.da.{}.rep_per={}.max_rep={}.txt'
         fname = fname.format(args.dataset, args.method, args.replace_percentage, args.max_replace)
@@ -70,6 +76,35 @@ if __name__ == '__main__':
                 for j in range(1,i):
                     new_sample += (' ' + str(src_seq[j]))
                 output_f.write("%d %d %s\n" % (da_id, sid, new_sample))  # sample_id, original_seq_id, sequence
+
+    elif args.method == 'RandSplit':
+        aug_num = int(len(dataset) * args.percentage)  # number of samples DA methods will be applied on
+        print("%d training samples are loaded, with percentage %f, "
+              "%d samples are selected" % (len(dataset), args.percentage, aug_num))
+        cur_num = 0
+        used_iid_list = []
+        while cur_num < aug_num:
+            cur_num += 1
+            sid = random.randint(1, len(dataset))
+            while (sid in used_iid_list) or len(dataset[sid]) < 2*(args.cut_points+1):
+                sid = random.randint(1, len(dataset))
+            used_iid_list.append(sid)
+            src_seq = dataset[sid]
+            org_len = len(src_seq)
+            cut_points = [2*i for i in random.sample(range(1, int(len(src_seq)/2)), args.cut_points)]
+            cut_points.sort()
+            print("len=%d, cut at: %s" % (org_len, cut_points))
+            for i in range(-1, len(cut_points)):
+                da_id += 1
+                if i == -1:
+                    new_sample = utils_da.sequence2str(src_seq[0:cut_points[0]])
+                elif i == len(cut_points)-1:
+                    new_sample = utils_da.sequence2str(src_seq[cut_points[-1]:])
+                    print(new_sample)
+                else:
+                    new_sample = utils_da.sequence2str(src_seq[cut_points[i]:cut_points[i+1]])
+                output_f.write("%d %d %s\n" % (da_id, sid, new_sample))  # sample_id, original_seq_id, sequence
+
 
     elif args.method == 'SynRep':
         print("Augmenting using Synonym Replacement, with R=%f" % args.replace_percentage)
