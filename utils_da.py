@@ -27,9 +27,9 @@ def sequence2str(sequence):
         res += (' ' + str(sequence[i]))
     return res
 
-def load_similar_items(dataset_name):
+def load_similar_items(file_path):
     similar_map = {}
-    file_path = 'data/%s/splits/similar_items.txt' % dataset_name
+    # file_path = 'data/%s/splits/similar_items.txt' % dataset_name
     for line in open(file_path):
         line_data = line.rstrip().split(' ')
         line_data = list(map(int, line_data))
