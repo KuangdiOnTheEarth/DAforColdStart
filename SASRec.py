@@ -95,12 +95,17 @@ if __name__ == '__main__':
     if args.inference_only:
         model.eval()
         if args.cold_start:
-            NDCG_map, HR_map = cs_evaluate(model, dataset, args)
-            print('\nWarm-Start:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['ws'], HR_map['ws'])) # include data augmentation samples
-            print('User-CS:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['ucs'], HR_map['ucs']))
-            print('Item-CS:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['ics'], HR_map['ics']))
-            print('Mixed-CS:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['mcs'], HR_map['mcs']))
-            print('Weighted-Average:\t (NDCG@10: %.4f, HR@10: %.4f)' % (NDCG_map['avg'], HR_map['avg']))
+            NDCG10_map, HR10_map, NDCG30_map, HR30_map = cs_evaluate(model, dataset, args)
+            print('\nWarm-Start:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)'
+                  % (NDCG10_map['ws'], HR10_map['ws'], NDCG30_map['ws'], HR30_map['ws'])) # include data augmentation samples
+            print('User-CS:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)'
+                  % (NDCG10_map['ucs'], HR10_map['ucs'], NDCG30_map['ucs'], HR30_map['ucs']))
+            print('Item-CS:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)'
+                  % (NDCG10_map['ics'], HR10_map['ics'], NDCG30_map['ics'], HR30_map['ics']))
+            print('Mixed-CS:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)'
+                  % (NDCG10_map['mcs'], HR10_map['mcs'], NDCG30_map['mcs'], HR30_map['mcs']))
+            print('Weighted-Average:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)'
+                  % (NDCG10_map['avg'], HR10_map['avg'], NDCG30_map['avg'], HR30_map['avg']))
         else:
             t_test = evaluate(model, dataset, args)
             print('test (NDCG@10: %.4f, HR@10: %.4f)' % (t_test[0], t_test[1]))
@@ -115,6 +120,7 @@ if __name__ == '__main__':
 
     best_valid = 0
     best_epoch = 0
+    best_evaluation_results = None
     best_model_state_dict = None
     
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
@@ -144,13 +150,19 @@ if __name__ == '__main__':
                 t_valid = evaluate_valid(model, dataset, args)
                 log_str = ''
                 log_str += ('\nepoch:%d, time: %f(s):\nValid: (NDCG@10: %.4f, HR@10: %.4f)\n' % (epoch, T, t_valid[0], t_valid[1]))
-                NDCG_map, HR_map = cs_evaluate(model, dataset, args)
+                evaluation_results = cs_evaluate(model, dataset, args)
+                NDCG10_map, HR10_map, NDCG30_map, HR30_map = evaluation_results
                 log_str += 'test sets:\n'
-                log_str += ('Warm-Start: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['ws'], HR_map['ws']))  # include data augmentation samples
-                log_str += ('User-CS: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['ucs'], HR_map['ucs']))
-                log_str += ('Item-CS: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['ics'], HR_map['ics']))
-                log_str += ('Mixed-CS: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['mcs'], HR_map['mcs']))
-                log_str += ('Weighted-Average: (NDCG@10: %.4f, HR@10: %.4f)\n' % (NDCG_map['avg'], HR_map['avg']))
+                log_str += ('Warm-Start: (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)\n'
+                            % (NDCG10_map['ws'], HR10_map['ws'], NDCG30_map['ws'], HR30_map['ws']))  # include data augmentation samples
+                log_str += ('User-CS:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)\n'
+                            % (NDCG10_map['ucs'], HR10_map['ucs'], NDCG30_map['ucs'], HR30_map['ucs']))
+                log_str += ('Item-CS:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)\n'
+                            % (NDCG10_map['ics'], HR10_map['ics'], NDCG30_map['ics'], HR30_map['ics']))
+                log_str += ('Mixed-CS:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)\n'
+                            % (NDCG10_map['mcs'], HR10_map['mcs'], NDCG30_map['mcs'], HR30_map['mcs']))
+                log_str += ('Weighted-Average:\t (NDCG@10: %.4f, HR@10: %.4f) (NDCG@30: %.4f, HR@30: %.4f)\n'
+                            % (NDCG10_map['avg'], HR10_map['avg'], NDCG30_map['avg'], HR30_map['avg']))
                 print(log_str)
                 f.write(log_str)
                 f.flush()
@@ -158,6 +170,7 @@ if __name__ == '__main__':
                 if t_valid[0] > best_valid:
                     best_epoch = epoch
                     best_valid = t_valid[0]
+                    best_evaluation_results = evaluation_results
                     best_model_state_dict = deepcopy(model.state_dict())
             else:
                 t_test = evaluate(model, dataset, args)
@@ -177,6 +190,14 @@ if __name__ == '__main__':
             # torch.save(model.state_dict(), os.path.join(folder, fname))
             torch.save(best_model_state_dict, os.path.join(folder, fname))
             f.write("\nBest epoch: %d, validation NDCG@10=%f" % (best_epoch, best_valid))
+
+            metrics = ['NDCG@10', 'HR@10', 'NDCG@30', 'HR@30']
+            splits = ['ws', 'ucs', 'ics', 'mcs', 'avg']
+            print("Evaluation Metric: WS, UCS, ICS, MCS, AVG")
+            for i in range(4):
+                metric_name = metrics[i]
+                res = best_evaluation_results[i]
+                f.write("\n%s: %.4f\t%.4f\t%.4f\t%.4f\t%.4f" % (metric_name, res['ws'], res['ucs'], res['ics'], res['mcs'], res['avg']))
             f.flush()
     
     f.close()

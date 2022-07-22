@@ -20,7 +20,7 @@ parser.add_argument('--cut_points', default=5, type=int)
 # settings for Synonym Replacement method
 parser.add_argument('--replace_percentage', default=0.1, type=float)
 parser.add_argument('--max_replace', default=5, type=int)
-parser.add_argument('--augmentation_file', type=str)
+parser.add_argument('--similarity_file', type=str)
 
 args = parser.parse_args()
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     elif args.method == 'SynRep':
         print("Augmenting using Synonym Replacement, with R=%f" % args.replace_percentage)
-        cs_similar_map = utils_da.load_similar_items(args.augmentation_file)  # cs_id -> [similar_id1, similar_id2, similar_id3]
+        cs_similar_map = utils_da.load_similar_items(args.similarity_file)  # cs_id -> [similar_id1, similar_id2, similar_id3]
         print("len(cs_similar_map) = %d" % len(cs_similar_map))
         similar_appearances = utils_da.find_similar_appearance(dataset, cs_similar_map)
         print("len(similar_appearance) = %d" % len(similar_appearances))

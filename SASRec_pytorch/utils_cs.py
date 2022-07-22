@@ -92,18 +92,24 @@ def cs_evaluate(model, dataset, args):
 
     [train_map, valid_map, test_map, samplenum, itemnum] = copy.deepcopy(dataset)
 
-    NDCG_map = {}
-    HR_map = {}
+    NDCG10_map = {}
+    HR10_map = {}
+    NDCG30_map = {}
+    HR30_map = {}
     total_samples = 0 # used to calculate avg NDCG and HR
-    avg_NDCG_numerator = 0 # used to calculate avg NDCG and HR
-    avg_HR_numerator = 0 # used to calculate avg NDCG and HR
+    avg_NDCG10_numerator = 0 # used to calculate avg NDCG and HR
+    avg_HR10_numerator = 0 # used to calculate avg NDCG and HR
+    avg_NDCG30_numerator = 0  # used to calculate avg NDCG and HR
+    avg_HR30_numerator = 0  # used to calculate avg NDCG and HR
 
     for set_name in ['ws', 'ucs', 'ics', 'mcs']:
         train = train_map[set_name]
         valid = valid_map[set_name]
         test = test_map[set_name]
-        NDCG = 0.0
-        HT = 0.0
+        NDCG10 = 0.0
+        HT10 = 0.0
+        NDCG30 = 0.0
+        HT30 = 0.0
         valid_user = 0.0
 
         sid_list = list(test.keys())
@@ -150,21 +156,30 @@ def cs_evaluate(model, dataset, args):
             valid_user += 1
 
             if rank < 10:
-                NDCG += 1 / np.log2(rank + 2)
-                HT += 1
+                NDCG10 += 1 / np.log2(rank + 2)
+                HT10 += 1
+            if rank < 30:
+                NDCG30 += 1 / np.log2(rank + 2)
+                HT30 += 1
             if valid_user % 100 == 0:
                 print('.', end="")
                 sys.stdout.flush()
 
-        NDCG_map[set_name] = NDCG / valid_user
-        HR_map[set_name] = HT / valid_user
+        NDCG10_map[set_name] = NDCG10 / valid_user
+        HR10_map[set_name] = HT10 / valid_user
+        NDCG30_map[set_name] = NDCG30 / valid_user
+        HR30_map[set_name] = HT30 / valid_user
 
-        avg_NDCG_numerator += NDCG_map[set_name] * valid_user
-        avg_HR_numerator += HR_map[set_name] * valid_user
+        avg_NDCG10_numerator += NDCG10_map[set_name] * valid_user
+        avg_HR10_numerator += HR10_map[set_name] * valid_user
+        avg_NDCG30_numerator += NDCG30_map[set_name] * valid_user
+        avg_HR30_numerator += HR30_map[set_name] * valid_user
         total_samples += valid_user
 
     # calculate the weighted average over all samples across test sets
-    NDCG_map['avg'] = avg_NDCG_numerator / total_samples
-    HR_map['avg'] = avg_HR_numerator / total_samples
+    NDCG10_map['avg'] = avg_NDCG10_numerator / total_samples
+    HR10_map['avg'] = avg_HR10_numerator / total_samples
+    NDCG30_map['avg'] = avg_NDCG10_numerator / total_samples
+    HR30_map['avg'] = avg_HR10_numerator / total_samples
 
-    return NDCG_map, HR_map
+    return NDCG10_map, HR10_map, NDCG30_map, HR30_map
