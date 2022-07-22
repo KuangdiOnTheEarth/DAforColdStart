@@ -83,6 +83,7 @@ if __name__ == '__main__':
               "%d samples are selected" % (len(dataset), args.percentage, aug_num))
         cur_num = 0
         used_iid_list = []
+        len_sum = 0
         while cur_num < aug_num:
             cur_num += 1
             sid = random.randint(1, len(dataset))
@@ -90,6 +91,7 @@ if __name__ == '__main__':
                 sid = random.randint(1, len(dataset))
             used_iid_list.append(sid)
             src_seq = dataset[sid]
+            len_sum += len(src_seq)
             org_len = len(src_seq)
             cut_points = [2*i for i in random.sample(range(1, int(len(src_seq)/2)), args.cut_points)]
             cut_points.sort()
@@ -104,6 +106,7 @@ if __name__ == '__main__':
                 else:
                     new_sample = utils_da.sequence2str(src_seq[cut_points[i]:cut_points[i+1]])
                 output_f.write("%d %d %s\n" % (da_id, sid, new_sample))  # sample_id, original_seq_id, sequence
+        print("AvgLen of DA set: %d" %(len_sum / (da_id-raw_num)))
 
 
     elif args.method == 'SynRep':

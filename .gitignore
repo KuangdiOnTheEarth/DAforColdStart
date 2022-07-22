@@ -7,3 +7,5 @@ data
 word2vec/text8
 data/Video.txt
 data/Video.txt
+word2vec/glove-wiki-gigaword-100.model
+word2vec/glove-wiki-gigaword-100.model.vectors.npy
