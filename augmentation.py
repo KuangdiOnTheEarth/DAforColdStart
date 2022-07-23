@@ -22,10 +22,14 @@ parser.add_argument('--replace_percentage', default=0.1, type=float)
 parser.add_argument('--max_replace', default=5, type=int)
 parser.add_argument('--similarity_file', type=str)
 
+# settings for Random Ending
+parser.add_argument('--maxLenR', default=1.0, type=float) # the upper limitation of the length of fake samples to original length
+parser.add_argument('--maxAug', default=5, type=int) # max number of fake samples generated from a selected sequence
+
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    da_methods = ['SeqSplit', 'RandSplit', 'SynRep', 'Mixed']
+    da_methods = ['SeqSplit', 'RandSplit', 'RandEnd', 'SynRep', 'Mixed']
     if args.method not in da_methods:
         print("Illegal data augmentation method, select from " + str(da_methods))
 
@@ -35,6 +39,9 @@ if __name__ == '__main__':
     elif args.method == 'RandSplit':
         fname = '{}.da.{}.per={}.cut_points={}.txt'
         fname = fname.format(args.dataset, args.method, args.percentage, args.cut_points)
+    elif args.method == 'RandEnd':
+        fname = '{}.da.{}.per={}.maxLenR={}.maxAug={}.txt'
+        fname = fname.format(args.dataset, args.method, args.percentage, args.maxLenR, args.maxAug)
     elif args.method == 'SynRep':
         fname = '{}.da.{}.rep_per={}.max_rep={}.txt'
         fname = fname.format(args.dataset, args.method, args.replace_percentage, args.max_replace)
@@ -109,6 +116,27 @@ if __name__ == '__main__':
                 output_f.write("%d %d %s\n" % (da_id, sid, new_sample))  # sample_id, original_seq_id, sequence
         print("AvgLen of DA set: %d" %(len_sum / (da_id-raw_num)))
 
+    elif args.method == 'RandEnd':
+        src_num = int(len(dataset) * args.percentage)  # number of samples DA methods will be applied on
+        selected_sid_list = random.sample(range(1, len(dataset) + 1), src_num)
+        print("%d training samples are loaded, with percentage %f, "
+              "%d samples are selected" % (len(dataset), args.percentage, src_num))
+        length_sum = 0
+        for sid in selected_sid_list:
+            org_seq = dataset[sid]
+            org_len = len(org_seq)
+            num_generate = max(min(args.maxAug, int(org_len * args.maxLenR)-1), 0)
+            rightmost_index = int(org_len * args.maxLenR)
+            end_indexes = random.sample(range(1, rightmost_index), num_generate) # sample length in range [1, len(seq)-1]
+            print("original: %s" % str(org_seq))
+            for idx in end_indexes:
+                # if i < 2: continue
+                da_id += 1
+                new_sample = utils_da.sequence2str(org_seq[0:idx])
+                length_sum += len(new_sample)
+                print("-> %s" % str(new_sample))
+                output_f.write("%d %d %s\n" % (da_id, sid, new_sample))  # sample_id, original_seq_id, sequence
+        print("Average length of augmentation sampmles: %.4f" % (length_sum / (da_id-raw_num)))
 
     elif args.method == 'SynRep':
         print("Augmenting using Synonym Replacement, with R=%f" % args.replace_percentage)
