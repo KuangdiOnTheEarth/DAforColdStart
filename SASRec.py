@@ -189,14 +189,16 @@ if __name__ == '__main__':
             fname = fname.format(args.num_epochs, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen, args.cold_start)
             # torch.save(model.state_dict(), os.path.join(folder, fname))
             torch.save(best_model_state_dict, os.path.join(folder, fname))
+            print("\nBest epoch: %d, validation NDCG@10=%f" % (best_epoch, best_valid))
             f.write("\nBest epoch: %d, validation NDCG@10=%f" % (best_epoch, best_valid))
 
             metrics = ['NDCG@10', 'HR@10', 'NDCG@30', 'HR@30']
             splits = ['ws', 'ucs', 'ics', 'mcs', 'avg']
-            print("Evaluation Metric: WS, UCS, ICS, MCS, AVG")
+            f.write("\nEvaluation Metric: WS, UCS, ICS, MCS, AVG")
             for i in range(4):
                 metric_name = metrics[i]
                 res = best_evaluation_results[i]
+                print("\n%s: %.4f\t%.4f\t%.4f\t%.4f\t%.4f" % (metric_name, res['ws'], res['ucs'], res['ics'], res['mcs'], res['avg']))
                 f.write("\n%s: %.4f\t%.4f\t%.4f\t%.4f\t%.4f" % (metric_name, res['ws'], res['ucs'], res['ics'], res['mcs'], res['avg']))
             f.flush()
     
