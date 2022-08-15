@@ -30,7 +30,9 @@ File Explanation:
 - `SASRec_pytorch/utils_cs.py`: contains the modified versions of functions from `utils.py`, these functions are used to supports the cold-start training and evaluation.
 - `formate_ml-1m.py`: script for processing raw MovieLens-1M datasets (e.g. extract the user behaviour sequences and item list).
 - `data_split.py`: used to identify the cold-start users and items, split the sequences in to four splits: ws, ucs, ics, mcs.
-- `augmentation.py`
+- `find_similar.ipynb`: script for finding the synonyms for cold-start items.
+- `word2vec`: a folder that contains some training data and stopwords list for Word2Vec and synonym identification.
+- `augmentation.py`: the implementation of the data augmentation approaches.
 ---
 
 Execution:
