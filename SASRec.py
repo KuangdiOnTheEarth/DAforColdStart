@@ -61,8 +61,7 @@ if __name__ == '__main__':
     print('average sequence length: %.2f' % (cc / len(user_train)))
     
     f = open(os.path.join(args.output_dir, args.dataset + '_' + args.train_dir, 'log.txt'), 'w')
-    f.write("%s - %s\nMaxLen=%d, Dropout=%f\nAugmentation dataset: %s\n"
-            % ("SASRec", args.dataset, args.maxlen, args.dropout_rate, args.da_file))
+    f.write("%s - %s\nAugmentation data: %s\n" % ("SASRec", args.dropout_rate, args.da_file))
     f.flush()
     
     sampler = WarpSampler(user_train, usernum, itemnum, batch_size=args.batch_size, maxlen=args.maxlen, n_workers=3)

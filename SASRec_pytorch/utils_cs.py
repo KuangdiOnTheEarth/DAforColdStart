@@ -165,6 +165,8 @@ def cs_evaluate(model, dataset, args):
                 print('.', end="")
                 sys.stdout.flush()
 
+        print("%s: valid user: %d" % (set_name, valid_user))
+
         NDCG10_map[set_name] = NDCG10 / valid_user
         HR10_map[set_name] = HT10 / valid_user
         NDCG30_map[set_name] = NDCG30 / valid_user
@@ -179,7 +181,7 @@ def cs_evaluate(model, dataset, args):
     # calculate the weighted average over all samples across test sets
     NDCG10_map['avg'] = avg_NDCG10_numerator / total_samples
     HR10_map['avg'] = avg_HR10_numerator / total_samples
-    NDCG30_map['avg'] = avg_NDCG10_numerator / total_samples
-    HR30_map['avg'] = avg_HR10_numerator / total_samples
+    NDCG30_map['avg'] = avg_NDCG30_numerator / total_samples
+    HR30_map['avg'] = avg_HR30_numerator / total_samples
 
     return NDCG10_map, HR10_map, NDCG30_map, HR30_map

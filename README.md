@@ -1,8 +1,8 @@
 Introduction:
-This Git repository is the Python implementation of my MSc project *Improving Cold-Start Ability of Sequential Recommenders using Data Augmentation*.
+This Git repository is the Python implementation of my MSc project *Improve Cold-Start Recommendations with Data Augmentation in Sequential Recommenders*.
 
 The baseline recommender is a self-attentive model called SASRec, with the reference to the original paper attached below.
-The Authors have published their tensorflow implementation of proposed model in [this repository](https://github.com/kang205/SASRec).
+The authors have published their tensorflow implementation of proposed model in [this repository](https://github.com/kang205/SASRec).
 A pytorch version of the code can be found in [this repository](https://github.com/pmixer/SASRec.pytorch).
 In this project, the code implementation uses pytorch framework, and has referred to the scripts in the latter repository.
 
@@ -19,22 +19,29 @@ In this project, the code implementation uses pytorch framework, and has referre
 
 ---
 
-Version:
+Environment:
 - CUDA: 10.2
 - pytorch: 1.6
 
 ---
 
-Script:
+Project Structure:
 - `formate_ml-1m.py`: process raw datasets (e.g. extract the user behaviour sequences and item list).
 - `data_split.py`: identify the cold-start users and items, split the sequences in to four splits: ws, ucs, ics, mcs.
 - `utils_cs.py`: contains the modified versions of functions from `utils.py`, these functions are used to supports the cold-start training and evaluation.
 ---
 
 Execution:
-1. Execute `formate_ml-1m` and `data_split.py` for dataset preprocessing and splitting. 
-2. Use `augmentation.py` to apply different data augmentation methods.
-3. Run `SASRec.py` for training and evaluation on the SASRec model, use `--cold_start=true` flag to activate the cold-start mode (otherwise the mode just works as original).
+1. Execute `formate_ml-1m` and `data_split.py` for dataset preprocessing and task sets splitting. 
+2. Use `augmentation.py` to apply different data augmentation methods; 
+   for the Synonym-Replacement approach, the synonym list should be generated in advance using `find_similar.ipynb`.
+3. Run `SASRec.py` for model training and evaluation, the generated augmentation data can be added into the training set by using the command line paramenter `--da_file`
+   
+use `--cold_start=true` flag to activate the cold-start mode (otherwise the mode just works as original).
+
+Example of applying SynReplace augmentation:
+
+
 E.g. Train a SASRec model with a specified data augmentation file:
 
 E.g. Run a pretrained model, evaluate its performance only:
