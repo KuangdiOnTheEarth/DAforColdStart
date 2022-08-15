@@ -14,7 +14,7 @@ parser.add_argument('--method', required=True, type=str)
 # settings for Synonym Replacement method
 parser.add_argument('--replace_percentage', default=1.0, type=float)  # not used in parameter tuning
 parser.add_argument('--augNum', default=5, type=int)
-parser.add_argument('--similarity_file', type=str)
+parser.add_argument('--synonym_file', type=str)
 
 # settings for SeqSplit
 parser.add_argument('--maxLenR', default=0.5, type=float) # the upper limitation of the length of fake samples to original length
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 
     elif args.method == 'SynRep':
         print("Augmenting using Synonym Replacement, with R=%f" % args.replace_percentage)
-        cs_similar_map = utils_da.load_similar_items(args.similarity_file)  # cs_id -> [similar_id1, similar_id2, similar_id3]
+        cs_similar_map = utils_da.load_similar_items(args.synonym_file)  # cs_id -> [similar_id1, similar_id2, similar_id3]
         print("len(cs_similar_map) = %d" % len(cs_similar_map))
         similar_appearances = utils_da.find_similar_appearance(dataset, cs_similar_map)
         print("len(similar_appearance) = %d" % len(similar_appearances))
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         # ------------- SR ---------------------------
         print("Augmenting using Synonym Replacement, with R=%f" % args.replace_percentage)
         cs_similar_map = utils_da.load_similar_items(
-            args.similarity_file)  # cs_id -> [similar_id1, similar_id2, similar_id3]
+            args.synonym_file)  # cs_id -> [similar_id1, similar_id2, similar_id3]
         print("len(cs_similar_map) = %d" % len(cs_similar_map))
         similar_appearances = utils_da.find_similar_appearance(dataset, cs_similar_map)
         print("len(similar_appearance) = %d" % len(similar_appearances))

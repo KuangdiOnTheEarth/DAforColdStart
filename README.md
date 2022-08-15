@@ -25,10 +25,12 @@ Environment:
 
 ---
 
-Project Structure:
-- `formate_ml-1m.py`: process raw datasets (e.g. extract the user behaviour sequences and item list).
-- `data_split.py`: identify the cold-start users and items, split the sequences in to four splits: ws, ucs, ics, mcs.
-- `utils_cs.py`: contains the modified versions of functions from `utils.py`, these functions are used to supports the cold-start training and evaluation.
+File Explanation:
+- `data/ml-am`: contains the dataset of MovieLens. Some data files are kept in this archive, so the augmentation and model training process can be directly executed.
+- `SASRec_pytorch/utils_cs.py`: contains the modified versions of functions from `utils.py`, these functions are used to supports the cold-start training and evaluation.
+- `formate_ml-1m.py`: script for processing raw MovieLens-1M datasets (e.g. extract the user behaviour sequences and item list).
+- `data_split.py`: used to identify the cold-start users and items, split the sequences in to four splits: ws, ucs, ics, mcs.
+- `augmentation.py`
 ---
 
 Execution:
@@ -37,16 +39,28 @@ Execution:
    for the Synonym-Replacement approach, the synonym list should be generated in advance using `find_similar.ipynb`.
 3. Run `SASRec.py` for model training and evaluation, the generated augmentation data can be added into the training set by using the command line paramenter `--da_file`
    
-use `--cold_start=true` flag to activate the cold-start mode (otherwise the mode just works as original).
 
-Example of applying SynReplace augmentation:
-
-
-E.g. Train a SASRec model with a specified data augmentation file:
-
-E.g. Run a pretrained model, evaluate its performance only:
+Example of applying SynReplace augmentation. 
+Assume the dataset has been preprocessed, and the synonyms have been identified. 
+The first line of command generates the augmentation data.
+The second line of command trains and evaluates the recommendation model. 
+The agumentation file is passed into the model via parameter `--da_file`.
+The `--cold_start=true` flag is set to activate the cold-start mode (otherwise the mode just works as the original work).
 ```
-python SASRec.py --device=cuda --dataset=ml-1m --train_dir=default --state_dict_path='ml-1m_default/SASRec.epoch=601.lr=0.001.layer=2.head=1.hidden=50.maxlen=200.pth' --inference_only=true --maxlen=200
-
+python augmentation.py --dataset=ml-1m --method=SynRep --augNum=40 --synonym_file=data/ml-1m/similar_items/wikigiga_100_con
+.txt
+python SASRec.py --device=cuda --dataset=ml-1m --train_dir=default --maxlen=200 --dropout_rate=0.2 --lr=0.001 --cold_start=tru
+e --da_file=ml-1m.da.SynRep.augNum=40.txt
 ```
 
+Example execution of SeqSplit augmentation, or mixed SynReplace-SeqSplit augmentation:
+
+```
+python augmentation.py --dataset=ml-1m --method=SynRep --augNum=40 --synonym_file_file=data/ml-1m/similar_items/wikigiga_100_con.txt
+python SASRec.py --device=cuda --dataset=ml-1m --train_dir=default --maxlen=200 --dropout_rate=0.2 --lr=0.001 --cold_start=true --da_file=ml-1m.da.SynRep.augNum=40.txt
+```
+
+```
+python augmentation.py --dataset=ml-1m --method=Mixed --percentage=1.0 --maxAug=3 --synonym_file=data/ml-1m/similar_items/wikigiga_100_con.txt --augNum=40
+python SASRec.py --device=cuda --dataset=ml-1m --train_dir=default --cold_start=true --da_file=ml-1m.da.Mixed.SR_N=40.SS_P=1.0.SS_N=3.txt
+```
